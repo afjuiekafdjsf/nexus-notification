@@ -94,13 +94,13 @@ func StreamNotifications(c *gin.Context) {
 		`SELECT id, user_id, type, actor_id, actor_name, post_id, comment_id, content, is_read, created_at
 		 FROM notifications WHERE user_id=$1 AND is_read=FALSE ORDER BY created_at DESC LIMIT 20`, userID)
 	if rows != nil {
-		defer rows.Close()
 		for rows.Next() {
 			var n Notification
 			rows.Scan(&n.ID, &n.UserID, &n.Type, &n.ActorID, &n.ActorName, &n.PostID, &n.CommentID, &n.Content, &n.IsRead, &n.CreatedAt)
 			fmt.Fprintf(c.Writer, "data: {\"id\":\"%s\",\"type\":\"%s\",\"actor_name\":\"%s\",\"post_id\":\"%s\",\"created_at\":\"%s\"}\n\n",
 				n.ID, n.Type, n.ActorName, n.PostID, n.CreatedAt.Format(time.RFC3339))
 		}
+		rows.Close()
 		c.Writer.Flush()
 	}
 
