@@ -11,13 +11,20 @@ import (
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Accept X-User-ID from gateway (already validated upstream)
+		if uid := c.GetHeader("X-User-ID"); uid != "" {
+			c.Set("user_id", uid)
+			c.Set("username", c.GetHeader("X-Username"))
+			c.Next()
+			return
+		}
+
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
 			secret = "nexus-secret"
 		}
 
 		tokenStr := ""
-		// Support token via Authorization header or ?token= query param (for SSE/WS)
 		if auth := c.GetHeader("Authorization"); strings.HasPrefix(auth, "Bearer ") {
 			tokenStr = auth[7:]
 		} else if t := c.Query("token"); t != "" {
